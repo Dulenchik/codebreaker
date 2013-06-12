@@ -2,7 +2,7 @@ require "spec_helper"
 
 module Codebreaker
   describe Game do
-    let(:game) { Game.new.as_null_object }
+    let(:game) { Game.new }
     after(:all) { File.delete("scores") }
 
     context "public methods" do
@@ -14,56 +14,66 @@ module Codebreaker
       end
 
       context "#play" do
+        let(:game) { Game.new.as_null_object }
         before(:each) do
           game.stub(:read_guess)
           game.stub(:save_result)
           game.stub(:play_again?)
         end
-        after(:each) { game.play }
 
         it "call #start" do
           game.should_receive(:start)
+          game.play
         end
 
         it "call #read_guess" do
           game.should_receive(:read_guess)
+          game.play
         end
 
         it "call #make_respond" do
           game.should_receive(:make_respond)
+          game.play
         end
 
         it "call #end_game?" do
           game.should_receive(:end_game?)
+          game.play
         end
 
         it "call #save_result" do
           game.should_receive(:save_result)
+          game.play
         end
 
         it "call #reset" do
           game.should_receive(:reset)
+          game.play
         end
 
         it "call #play_again?" do
           game.should_receive(:play_again?)
+          game.play
         end
 
         it "shows goodbye message" do
           game.should_receive(:puts).with("See you soon")
+          game.play
         end
       end
     end
 
     context "private methods" do
       context "#start" do
-        after(:each) { game.send(:start) }
+        let(:game) { Game.new.as_null_object } 
         it "shows welcome message" do
           game.should_receive(:puts).with("Welcome to CodeBreaker!")
+          game.send(:start)
         end
 
         it "proposes enter the first guess" do
           game.should_receive(:puts).with("Try to guess what I propose")
+          game.send(:start)
         end
       end
 
@@ -79,20 +89,23 @@ module Codebreaker
 
       context "#reset" do
         context "resets settings" do
-          before(:each) { game.send(:reset) }
           it "makes @attempts equal to 3" do
+            game.send(:reset)
             game.instance_variable_get(:@attempts).should eql(3)
           end
 
           it "makes @hint equal to 0" do
+            game.send(:reset)
             game.instance_variable_get(:@hint).should be_zero
           end
 
           it "makes @guess empty" do
+            game.send(:reset)
             game.instance_variable_get(:@guess).should be_empty
           end
 
           it "makes @respond empty" do
+            game.send(:reset)
             game.instance_variable_get(:@respond).should be_empty
           end
         end
@@ -106,6 +119,7 @@ module Codebreaker
       context "#read_guess" do
         context "guess have < 4 items" do
           it "show warning message" do
+            game = Game.new.as_null_object
             game.stub(:gets).and_return("11111", "1111")
             game.should_receive(:puts).with("I don't understand... Try again")
             game.send(:read_guess)
@@ -192,48 +206,51 @@ module Codebreaker
         end
 
         context "calling #show_hint" do
-          after(:each) { game.send(:end_game?) }
-
           it "call #show_hint" do
             game.instance_variable_set(:@guess, ["h", "i", "n", "t"])
-            game.should_receive(:show_hint)            
+            game.should_receive(:show_hint)
+            game.send(:end_game?)
           end
 
           it "not call #show_hint" do
             game.instance_variable_set(:@guess, ["h", 1, "n", "t"])
             game.should_not_receive(:show_hint)            
+            game.send(:end_game?)
           end
 
           it "not call #show_hint also" do
             game.instance_variable_set(:@guess, ["i", "h", "t", "n"])
             game.should_not_receive(:show_hint)            
+            game.send(:end_game?)
           end
 
           it "call #show_hint once" do
             game.instance_variable_set(:@guess, ["h", "i", "n", "t"])
             game.instance_variable_set(:@hint, 5)
             game.should_not_receive(:show_hint)
+            game.send(:end_game?)
           end
         end
 
         context "shows messages" do
-          after(:each) { game.send(:end_game?) }
-
           it "shows win message" do
             game.instance_variable_set(:@respond, ["+", "+", "+", "+"])
             game.should_receive(:puts).with("Congratulate! You won!")
+            game.send(:end_game?)
           end
 
           it "shows lose message" do
             game.instance_variable_set(:@respond, ["+", "+", "+"])
             game.instance_variable_set(:@attempts, 1)
             game.should_receive(:puts).with("You lose, unfortunately...")
+            game.send(:end_game?)
           end
 
           it "shows result message" do
             game.instance_variable_set(:@respond, ["+", "+", "+"])
             game.instance_variable_set(:@attempts, 2)
             game.should_receive(:puts).with("Good try. Your result +++")
+            game.send(:end_game?)
           end
         end
 
@@ -273,31 +290,35 @@ module Codebreaker
 
       context "#save_result" do
         context "provides a dialogue with the user" do
-          after(:each) { game.send(:save_result) }
-
           it "shows question message" do
             game.stub(:gets).and_return("n")
             game.should_receive(:puts).with("Do you want to save your result? (y / n)")
+            game.send(:save_result)
           end
 
           it "repeatedly asks the question" do
             game.stub(:gets).and_return("b", "n")
             game.should_receive(:puts).with("Do you want to save your result? (y / n)").twice
+            game.send(:save_result)
           end
 
           it "reads answer and shows proposal message" do
+            game = Game.new.as_null_object
             game.stub(:gets).and_return("y")
             game.should_receive(:puts).with("Enter your name:")
+            game.send(:save_result)
           end
 
           it "reads name" do
             game.stub(:gets).and_return("y", "Lesha")
             File.should_receive(:open).with("scores", "a")
+            game.send(:save_result)
           end
 
           it "not asks name when answer equal 'n'" do
             game.stub(:gets).and_return("n")
             game.should_not_receive(:puts).with("Enter your name:")
+            game.send(:save_result)
           end
         end
 
@@ -317,16 +338,16 @@ module Codebreaker
 
       context "#play_again?" do
         context "provides a dialogue with the user" do
-          after(:each) { game.send(:play_again?) }
-
           it "shows question message" do
             game.stub(:gets).and_return("n")
             game.should_receive(:puts).with("Do you want to play again? (y / n)")
+            game.send(:play_again?)
           end
 
           it "repeatedly asks the question" do
             game.stub(:gets).and_return("b", "n")
             game.should_receive(:puts).with("Do you want to play again? (y / n)").twice
+            game.send(:play_again?)
           end
         end
 
